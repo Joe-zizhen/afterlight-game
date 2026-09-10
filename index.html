@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#171b19" />
+    <meta name="description" content="AFTERLIGHT 余烬：可交互的三维城市爆炸与刚体坍塌场景。" />
+    <title>AFTERLIGHT · 余烬</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23171b19'/%3E%3Cpath d='M14 49 32 13 50 49M22 35h20' fill='none' stroke='%23ed8258' stroke-width='5'/%3E%3C/svg%3E" />
+    <script type="module" crossorigin src="./assets/index-IdTDv078.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-5WkPJSRC.css">
+  </head>
+  <body>
+    <main id="app">
+      <div id="scene" aria-label="可交互的三维城市爆炸场景"></div>
+      <div class="screen-shade" aria-hidden="true"></div>
+      <div id="flash" aria-hidden="true"></div>
+
+      <header class="topbar">
+        <a class="brand" href="./" aria-label="余烬首页"><span class="brand-symbol">A<span></span></span><span>AFTERLIGHT<span class="brand-zh">余烬</span></span></a>
+        <div class="scenario-toolbar" aria-label="城市与历史型号选择">
+          <label class="scenario-picker" for="city-control"><i data-lucide="building-2"></i><span><span class="picker-label">虚构城区</span><select id="city-control" aria-label="选择城市"></select></span><i data-lucide="chevron-down"></i></label>
+          <span class="scenario-divider"></span>
+          <label class="scenario-picker device-picker" for="device-control"><i data-lucide="bomb"></i><span><span class="picker-label">历史当量 · 从高到低</span><select id="device-control" aria-label="选择核弹历史型号"></select></span><i data-lucide="chevron-down"></i></label>
+        </div>
+        <nav class="top-actions" aria-label="场景工具">
+          <button class="icon-button" id="sound-button" aria-label="开启声音" data-tooltip="开启声音"><i data-lucide="volume-x"></i></button>
+          <button class="icon-button" id="capture-button" aria-label="保存画面" data-tooltip="保存画面"><i data-lucide="camera"></i></button>
+          <button class="icon-button" id="settings-button" aria-label="场景设置" aria-expanded="false" data-tooltip="场景设置"><i data-lucide="sliders-horizontal"></i></button>
+          <span class="action-separator"></span>
+          <button class="icon-button" id="fullscreen-button" aria-label="全屏" data-tooltip="全屏"><i data-lucide="maximize"></i></button>
+        </nav>
+      </header>
+
+      <section class="game-hud" aria-label="飞行仪表">
+        <div class="flight-heading"><span class="flight-live"></span><h1>自由飞行</h1><span id="flight-state">飞行中</span></div>
+        <div class="flight-telemetry">
+          <div><span>高度</span><strong id="flight-altitude">220</strong></div>
+          <div><span>速度</span><strong id="flight-speed">110</strong></div>
+          <div><span>航向</span><strong id="flight-heading">000</strong></div>
+        </div>
+        <div class="flight-location" id="flight-location">R 地区</div>
+      </section>
+      <nav class="game-views" aria-label="游戏视角">
+        <button class="icon-button active" data-game-view="flight" aria-label="飞机跟随视角" data-tooltip="飞机跟随（C）"><i data-lucide="plane"></i></button>
+        <button class="icon-button" data-game-view="overview" aria-label="落点俯瞰视角" data-tooltip="落点俯瞰"><i data-lucide="scan"></i></button>
+        <button class="icon-button" data-game-view="shrine" aria-label="游戏神社庭院视角" data-tooltip="神社庭院"><i data-lucide="landmark"></i></button>
+        <a class="icon-button" id="animation-link" href="?city=region-r&amp;mode=animation" aria-label="动画回放" data-tooltip="动画回放"><i data-lucide="film"></i></a>
+      </nav>
+      <div class="game-map"><canvas id="flight-map" width="192" height="192" aria-label="飞行区域地图"></canvas><span id="impact-readout">落点 528 / 150</span></div>
+      <div class="game-reticle" aria-hidden="true"><span></span><b></b><span></span></div>
+      <div class="game-result" id="flight-result" hidden><h2>飞机失事</h2><button id="respawn-button"><i data-lucide="plane"></i>重新起飞</button></div>
+      <footer class="game-controls">
+        <div class="flight-stick" id="flight-stick" role="group" aria-label="飞行摇杆，左右转弯，上下俯仰" title="转向 A / D，抬头 W，俯冲 S">
+          <i data-lucide="chevron-up" class="stick-up"></i><i data-lucide="chevron-down" class="stick-down"></i><i data-lucide="chevron-left" class="stick-left"></i><i data-lucide="chevron-right" class="stick-right"></i><span id="stick-knob"></span>
+        </div>
+        <div class="flight-engine"><label for="flight-throttle">油门<span id="throttle-value">55%</span></label><input id="flight-throttle" type="range" min="0" max="100" value="55" aria-label="飞机油门" title="减速 Q，加速 E，冲刺 Shift" /></div>
+        <div class="flight-actions"><div class="drop-count"><span>投放</span><strong id="drop-count">00</strong><span id="payload-state">就绪</span></div><button id="drop-button" aria-label="投放核弹" data-tooltip="投放（空格）"><i data-lucide="bomb"></i><span>投放</span></button><button class="icon-button" id="flight-pause" aria-label="暂停游戏" data-tooltip="暂停（P）"><i data-lucide="pause"></i></button><button class="icon-button" id="flight-reset" aria-label="重新开局" data-tooltip="重新开局"><i data-lucide="rotate-ccw"></i></button></div>
+      </footer>
+
+      <section class="scene-heading" aria-label="场景信息">
+        <div class="eyebrow"><span class="thin-line"></span> THE MOMENT AFTER</div>
+        <h1>临界之后<span>余烬之城</span></h1>
+        <div class="scene-tags"><span id="city-tag">城市 01</span><b>·</b><span id="city-name">港湾城区</span></div>
+        <div class="weapon-summary"><div><span id="yield-value">50 Mt</span><button class="icon-button compact" id="history-button" aria-label="查看历史当量及来源" data-tooltip="历史资料与来源"><i data-lucide="book-open"></i></button></div><span id="yield-basis">1961 年试验当量</span><span class="yield-boundary">电影预设 · 未经实测校准</span></div>
+      </section>
+
+      <aside class="phase-display" aria-label="当前阶段">
+        <div class="phase-label"><span id="phase-number">04</span><span>/ 06</span></div>
+        <h2 id="phase-name">冲击前沿</h2>
+        <div class="phase-rule"><span id="phase-fill"></span></div>
+        <div class="phase-time">T + <span id="phase-clock">06.40</span><span>s</span></div>
+      </aside>
+
+      <aside class="settings-panel" id="settings-panel" hidden>
+        <div class="panel-header"><h2>场景设置</h2><button class="icon-button compact" id="close-settings" aria-label="关闭设置"><i data-lucide="x"></i></button></div>
+        <div class="setting-row"><span>光照</span><div class="segmented" id="lighting-control"><button data-light="day" class="active" aria-pressed="true">日照</button><button data-light="dusk" aria-pressed="false">暮色</button></div></div>
+        <label class="setting-row" for="scene-preset"><span>场景幅度</span><select id="scene-preset"><option value="compact">紧凑</option><option value="standard" selected>标准</option><option value="extended">扩展</option></select></label>
+        <label class="setting-row" for="quality-control"><span>渲染精度</span><select id="quality-control"><option value="high">高</option><option value="medium">标准</option></select></label>
+        <label class="setting-row" for="shake-toggle"><span>镜头震动</span><input type="checkbox" role="switch" id="shake-toggle" checked /><span class="switch" aria-hidden="true"></span></label>
+        <label class="setting-row" for="auto-toggle"><span>镜头环绕</span><input type="checkbox" role="switch" id="auto-toggle" /><span class="switch" aria-hidden="true"></span></label>
+        <label class="setting-range" for="exposure-control"><span>曝光补偿<span id="exposure-value">1.0</span></span><input id="exposure-control" type="range" min="0.5" max="1.6" value="1" step="0.05" /></label>
+        <div class="model-note">虚构城市 / 通用物理模型</div>
+      </aside>
+
+      <nav class="camera-rail" aria-label="镜头视角">
+        <span class="rail-label">VIEW</span>
+        <button class="camera-button active" data-view="panorama" aria-label="全景视角" aria-pressed="true" data-tooltip="全景"><i data-lucide="orbit"></i><span>全景</span></button>
+        <button class="camera-button" data-view="aerial" aria-label="俯瞰视角" aria-pressed="false" data-tooltip="俯瞰"><i data-lucide="scan"></i><span>俯瞰</span></button>
+        <button class="camera-button" data-view="street" aria-label="近景视角" aria-pressed="false" data-tooltip="近景"><i data-lucide="building-2"></i><span>近景</span></button>
+        <button class="camera-button" data-view="shrine" aria-label="神社庭院视角" aria-pressed="false" data-tooltip="神社庭院" hidden><i data-lucide="landmark"></i><span>庭院</span></button>
+        <button class="camera-button" data-view="delivery" aria-label="投放跟随" aria-pressed="false" data-tooltip="投放跟随"><i data-lucide="arrow-down-to-line"></i><span>跟随</span></button>
+        <div class="rail-separator"></div>
+        <button class="icon-button" id="reset-camera" aria-label="重置镜头" data-tooltip="重置镜头"><i data-lucide="focus"></i></button>
+      </nav>
+
+      <div class="scene-meta"><span class="live-dot"></span><span id="state-label">时间已暂停</span><span class="meta-slash">/</span><span id="body-count">RIGID BODY</span></div>
+      <div class="coordinate-marker" aria-hidden="true"><span>N</span><div><span class="north"></span><span class="south"></span></div><span id="compass-label">NE</span></div>
+
+      <footer class="playback-bar">
+        <div class="playback-topline"><span class="timeline-title">事件时间轴<span id="timeline-status">PAUSED</span></span><span class="duration-label">00:00 <span>/</span> 00:38</span></div>
+        <div class="playback-controls">
+          <button id="play-button" class="play-button" aria-label="播放"><i data-lucide="play"></i></button>
+          <button id="restart-button" class="icon-button" aria-label="重新投放" data-tooltip="重新投放"><i data-lucide="rotate-ccw"></i></button>
+          <div class="time-readout"><span id="time-seconds">06</span><span class="time-fraction">.<span id="time-centiseconds">40</span></span><span class="time-unit">s</span></div>
+          <div class="timeline-wrap"><input id="timeline" aria-label="动画时间轴" type="range" min="0" max="38" step="0.05" value="12.4" /><div class="timeline-ticks" aria-hidden="true"><span>00 s</span><span>09.5 s</span><span>19 s</span><span>28.5 s</span><span>38 s</span></div></div>
+          <label class="speed-control" aria-label="播放速度"><select id="speed-control" aria-label="播放速度"><option value="0.25">0.25×</option><option value="0.5">0.5×</option><option value="1" selected>1×</option><option value="2">2×</option></select><i data-lucide="chevron-down"></i></label>
+          <button id="loop-button" class="icon-button" aria-label="循环播放" aria-pressed="false" data-tooltip="循环播放"><i data-lucide="repeat"></i></button><a class="icon-button" href="?city=region-r" aria-label="进入飞行游戏" data-tooltip="飞行游戏"><i data-lucide="plane"></i></a>
+        </div>
+        <div class="bottomline"><span>AFTERLIGHT STUDIO <span class="footer-divider">/</span> 交互场景 001</span><span>虚构场景 · 非武器效应评估<span class="footer-dot"></span>WEBGL</span></div>
+      </footer>
+
+      <dialog id="history-dialog" class="history-dialog" aria-labelledby="history-title">
+        <div class="history-header"><div><span class="eyebrow">HISTORICAL ARCHIVE</span><h2 id="history-title">历史当量资料</h2></div><button class="icon-button" id="close-history" aria-label="关闭历史资料"><i data-lucide="x"></i></button></div>
+        <div class="history-table-wrap"><table class="history-table"><thead><tr><th>型号</th><th>当量</th><th>数值性质</th><th>来源</th></tr></thead><tbody id="history-rows"></tbody></table></div>
+        <p class="history-note" id="history-note"></p>
+        <div class="history-footer"><span>1 Mt = 1000 kt · TNT 当量</span><span>查阅于 2026-09-08</span></div>
+        <p class="history-boundary">每个型号对应独立的电影场景预设。历史当量供资料查阅，动画尺度未经实测校准。</p>
+      </dialog>
+
+      <div id="loading" class="loading-screen"><div class="loading-brand">AFTERLIGHT<span>余烬</span></div><div class="loading-line"><span></span></div><p id="loading-label">正在构建城市</p></div>
+      <div id="toast" role="status" aria-live="polite"></div>
+    </main>
+  </body>
+</html>
